@@ -2,13 +2,20 @@ import React, { Component } from "react";
 import "./App.css";
 import "whatwg-fetch";
 import { lastfm, config } from "./config/";
-import Card, { CardContent, CardMedia } from "material-ui/Card";
-import { withStyles } from "material-ui/styles";
-import IconButton from "material-ui/IconButton";
-import Typography from "material-ui/Typography";
+import {
+  Paper,
+  Card,
+  CardContent,
+  CardMedia,
+  withStyles,
+  IconButton,
+  Typography,
+  CircularProgress
+} from "material-ui";
+
 import RefreshIcon from "material-ui-icons/Refresh";
 import PlayArrowIcon from "material-ui-icons/PlayArrow";
-import CircularProgress from "material-ui/Progress/CircularProgress";
+import Infoicon from "material-ui-icons/Info";
 import { green } from "material-ui/colors";
 
 const styles = theme => ({
@@ -43,6 +50,12 @@ const styles = theme => ({
   playIcon: {
     height: 38,
     width: 38
+  },
+  albumContainer: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center"
   }
 });
 
@@ -62,16 +75,18 @@ class App extends Component {
         "&format=json"
     )
       .then(resp => resp.json())
-      .then(data => data.recenttracks)
+      .then(data => {
+        return data.recenttracks;
+      })
       .then(tracks => {
         this.setState({ tracks: tracks });
       });
   };
   componentDidMount() {
-    this.updateTracks();
+    setTimeout(() => this.updateTracks(), 3000);
   }
   render() {
-    const { classes, theme } = this.props;
+    const { classes } = this.props;
     const { tracks } = this.state;
     const { track } = tracks;
 
@@ -80,7 +95,7 @@ class App extends Component {
         <header className="App-header">
           <img src={config.PROFILE_PIC_URI} className="App-logo" />
           <Typography type="headline" style={{ color: "white" }}>
-            What NAME is playing on Spotify
+            What lorderikir is playing on Spotify
           </Typography>
         </header>
         <div
@@ -121,31 +136,48 @@ class App extends Component {
                       </IconButton>
                     </div>
                   </div>
-                  <CardMedia
-                    className={classes.cover}
-                    image={track[0].image[3]["#text"]}
-                    title="Live from space album cover"
-                  />
+                  <div className={classes.albumContainer}>
+                    <CardMedia
+                      className={classes.cover}
+                      image={track[0].image[3]["#text"]}
+                      title={track[0].album["#text"]}
+                    />
+                  </div>
                 </Card>
-                {track.slice(1, 10).map((cTrack, key) => {
-                  return (
-                    <Card className={classes.card} key={key}>
-                      <div className={classes.details}>
-                        <CardContent className={classes.content}>
-                          <Typography type="title">{cTrack.name}</Typography>
-                          <Typography type="subheading" color="secondary">
-                            {cTrack.artist["#text"]}
-                          </Typography>
-                        </CardContent>
-                      </div>
-                      <CardMedia
-                        className={classes.smallCover}
-                        image={cTrack.image[2]["#text"]}
-                        title="Live from space album cover"
-                      />
-                    </Card>
-                  );
-                })}
+                <Paper style={{ maxHeight: "30vh", overflowY: "scroll" }}>
+                  {track.slice(1, 10).map((cTrack, key) => {
+                    return (
+                      <Card className={classes.card} key={key}>
+                        <div className={classes.details}>
+                          <CardContent className={classes.content}>
+                            <div style={{ display: "flex" }}>
+                              <Typography type="title">
+                                {cTrack.name}
+                              </Typography>
+                              <IconButton
+                                href={cTrack.url}
+                                aria-label="Track Info"
+                                style={{ padding: 10 }}
+                              >
+                                <Infoicon />
+                              </IconButton>
+                            </div>
+                            <Typography type="subheading" color="secondary">
+                              {cTrack.artist["#text"]}
+                            </Typography>
+                          </CardContent>
+                        </div>
+                        <div className={classes.albumContainer}>
+                          <CardMedia
+                            className={classes.smallCover}
+                            image={cTrack.image[2]["#text"]}
+                            title={cTrack.album["#text"]}
+                          />
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </Paper>
               </div>
             ) : (
               <CircularProgress size={100} />
